@@ -1,9 +1,12 @@
 # cxml
+
 A PHP library to handle cXML punchout orders
+
+Forked from https://github.com/hscheffknecht/cxml
 
 ## Install
 
-`composer require herbert/cxml:dev-main`
+`composer require tryy3/cxml:dev-main`
 
 ## Usage (punchout workflow)
 
@@ -11,43 +14,44 @@ A PHP library to handle cXML punchout orders
 
     // Contains request XML from POST request
     $requestXml = '<?xml…';
-    
+
     // Parse request XML (PunchOutSetupRequest)
     $xmlParser = new CXmlParser();
     $cXmlRequest = $xmlParser->parse($requestXml);
 
     /** @var PunchOutSetupRequest $setupRequest */
- 	$setupRequest = $cXmlRequest->getRequests()[0] ?? null;
+
+$setupRequest = $cXmlRequest->getRequests()[0] ?? null;
  	
  	// Check request
  	if (!$setupRequest || !$setupRequest instanceof PunchOutSetupRequest) {
-        throw new Exception('Invalid request');
-    }
-    
+throw new Exception('Invalid request');
+}
+
     // Get credentials
     $user = $cXmlRequest->getHeader()->getSenderIdentity();
     $password = $cXmlRequest->getHeader()->getSenderSharedSecret();
-    
+
     // Get punchout data
     $buyerCookie = $setupRequest->getBuyerCookie();
     $postUrl = $setupRequest->getBrowserFormPostUrl();
-    
+
     // Create startPageUrl (store submitted data in your database and generate a login URL with a hash)
     $startPageUrl = $this->generateStartPageUrl($user, $password, $buyerCookie, $postUrl);
-    
+
     // Create cXML envelope and status
     $cXml = $cxml = new CXml();
-	$cxml->setPayloadId(time() . '@' . $this->app->getCurrentRequest()->getHost());
+    $cxml->setPayloadId(time() . '@' . $this->app->getCurrentRequest()->getHost());
     $cXml->addResponse(new Status());
 
     // Create PunchOutSetupResponse
     $response = new PunchOutSetupResponse();
     $response->setStartPageUrl($startPageUrl);
     $cXml->addResponse($response);
-    
+
     // Return response XML
     return $cXml->render();
-    
+
 ### 2. Login (startPageUrl)
 
 Read submitted hash (from setup), load needed data and login the user:
